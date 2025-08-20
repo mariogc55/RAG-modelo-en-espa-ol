@@ -33,7 +33,7 @@ def crear_base_de_conocimiento():
 
 def consultar_base_de_conocimiento(query):
 
-    # 0. Traducir la pregunta del usuario de español a inglés
+    # 1. Traducir la pregunta del usuario de español a inglés
     try:
         translated_query = GoogleTranslator(source='es', target='en').translate(query)
         print(f"Pregunta traducida (a inglés): {translated_query}")
@@ -41,11 +41,11 @@ def consultar_base_de_conocimiento(query):
         print(f"Error al traducir la pregunta: {e}")
         translated_query = query # Si la traducción falla, usa la pregunta original
 
-    # 1. Cargar las incrustaciones
+    # 2. Cargar las incrustaciones
     embeddings = SentenceTransformerEmbeddings(model_name="all-mpnet-base-v2")
     db = Chroma(persist_directory=persist_directory, embedding_function=embeddings)
 
-    # 2. Inicializar el modelo LlamaCpp
+    # 3. Inicializar el modelo LlamaCpp
     llm = LlamaCpp(
         model_path = model_path,
         model_kwargs={"n_gpu_layers": 1},
@@ -55,7 +55,7 @@ def consultar_base_de_conocimiento(query):
         verbose=False,
     )
 
-    # 3. Crear la cadena de recuperación y ejecutar la consulta con la pregunta traducida
+    # 4. Crear la cadena de recuperación y ejecutar la consulta con la pregunta traducida
     qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=db.as_retriever())
     result_en = qa.run(translated_query)
 
@@ -80,4 +80,5 @@ if __name__ == "__main__":
         pregunta = input("Ingresa tu pregunta (o 'salir' para terminar): ")
         if pregunta.lower() == "salir":
             break
+
         consultar_base_de_conocimiento(pregunta)
